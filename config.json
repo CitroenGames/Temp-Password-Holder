@@ -1,0 +1,7 @@
+{
+  "port": 2000,
+  "privateKey": "private.key",
+  "caBundle": "ca_bundle.crt",
+  "certificate": "certificate.crt",
+  "secretKey": "generate-it-using-keygen.js"
+}
