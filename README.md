@@ -25,7 +25,7 @@ This is a simple Node.js application that allows you to securely store and retri
 2. Install the dependencies:
 
    ```bash
-   cd password-storage
+   cd Temp-Password-Holder
    npm install
    ```
 
