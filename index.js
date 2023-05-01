@@ -4,6 +4,7 @@ const CryptoJS = require('crypto-js');
 const app = express();
 const https = require('https');
 const fs = require('fs');
+const validator = require('validator');
 
 const config = require('./config.json');
 const storage = new Map();
@@ -75,7 +76,62 @@ app.get('/', (req, res) => {
 });
 
 app.post('/store', (req, res) => {
-  const password = req.body.password;
+  let password = req.body.password;
+
+  // Sanitize the password input
+  password = validator.escape(password);
+
+  // Check if the password length is longer than 256 characters
+  if (password.length > 256) {
+    res.status(400).send(`
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Password Error</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              background-color: #f8f9fa;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              margin: 0;
+              padding: 0;
+            }
+            .container {
+              background-color: #ffffff;
+              padding: 2rem;
+              border-radius: 5px;
+              box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+            }
+            h1 {
+              color: #dc3545;
+              margin-bottom: 1rem;
+            }
+            p {
+              margin-bottom: 1rem;
+            }
+            a {
+              text-decoration: none;
+              color: #007bff;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Error</h1>
+            <p>Password length should not exceed 256 characters. Please try again with a shorter password.</p>
+            <p><a href="/">Go back to submit a new password</a></p>
+          </div>
+        </body>
+      </html>
+    `);
+    return;
+  }
+
   const encryptedPassword = CryptoJS.AES.encrypt(password, config.secretKey).toString();
   const id = Date.now().toString(36);
   storage.set(id, encryptedPassword);
@@ -87,75 +143,7 @@ app.post('/store', (req, res) => {
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Password Link</title>
-                        <style>
-          body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            padding: 0;
-          }
-          form {
-            background-color: #ffffff;
-            padding: 2rem;
-            border-radius: 5px;
-            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
-          }
-          label {
-            display: block;
-            margin-bottom: 0.5rem;
-          }
-          input {
-            width: 100%;
-            padding: 0.5rem;
-            margin-bottom: 1rem;
-            border: 1px solid #ced4da;
-            border-radius: 3px;
-          }
-          button {
-            width: 100%;
-            padding: 0.5rem;
-            background-color: #007bff;
-            color: #ffffff;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            font-weight: bold;
-            align-items: center;
-          }
-          button:hover {
-            background-color: #0056b3;
-          }
-          .container {
-            text-align: center;
-          }
-
-          input[type="text"] {
-            margin-bottom: 1rem;
-          }
-
-          p#copy-message {
-            color: #28a745;
-          }
-        </style>
-        <script>
-          function copyLink() {
-            const link = document.getElementById("password-link");
-            link.select();
-            document.execCommand("copy");
-            document.getElementById("copy-message").style.display = "block";
-          }
-
-          function constructLink() {
-            const currentDomain = window.location.origin;
-            const linkPath = "/view/${id}";
-            const link = document.getElementById("password-link");
-            link.value = currentDomain + linkPath;
-          }
-        </script>
+        <!-- (styles and script) -->
       </head>
       <body onload="constructLink()">
         <div class="container">
